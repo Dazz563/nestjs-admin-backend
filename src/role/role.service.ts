@@ -19,10 +19,10 @@ export class RoleService {
     }
 
     findOne(condition): Promise<Role> {
-        return this.roleRepo.findOne(condition);
+        return this.roleRepo.findOne(condition, { relations: ['permissions'] });
     }
 
-    async update(id: number, attrs: Partial<Role>) {
+    async update(id: number, attrs: any) {
         const user = await this.findOne(id);
 
         if (!user) {

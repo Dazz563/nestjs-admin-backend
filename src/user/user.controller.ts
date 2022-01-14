@@ -30,7 +30,7 @@ export class UserController {
         return this.userService.create({
             ...data,
             password: password,
-            role: { id: body.role_id }
+            role: { id: role_id }
         });
     }
 

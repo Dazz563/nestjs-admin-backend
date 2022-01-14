@@ -16,8 +16,12 @@ export class RoleController {
     @Post()
     async create(
         @Body('name') name: string,
+        @Body('permissions') ids: number[],
     ) {
-        return this.roleService.create({ name });
+        return this.roleService.create({
+            name,
+            permissions: ids.map(id => ({ id }))
+        });
     }
 
     @Get('/:id')
@@ -29,8 +33,16 @@ export class RoleController {
     async update(
         @Param('id') id: number,
         @Body('name') name: string,
+        @Body('permissions') ids: number[],
     ) {
-        return this.roleService.update(id, { name });
+        await this.roleService.update(id, { name });
+
+        const role = await this.roleService.findOne({ id });
+
+        return this.roleService.create({
+            ...role,
+            permissions: ids.map(id => ({ id }))
+        });
     }
 
     @Delete('/:id')
