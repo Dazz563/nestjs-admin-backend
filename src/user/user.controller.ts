@@ -1,10 +1,12 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { User } from './models/user.entity';
 import { UserService } from './user.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './models/create-user-dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { UpdateUserDto } from './models/update-user-dto';
+import { AuthService } from 'src/auth/auth.service';
+import { Request } from 'express';
 
 
 @Controller('users')
@@ -12,13 +14,14 @@ import { UpdateUserDto } from './models/update-user-dto';
 @UseGuards(AuthGuard)
 export class UserController {
     constructor(
-        private userService: UserService
+        private userService: UserService,
+        private authService: AuthService,
     ) { }
 
     @Get()
-    all(@Query('page') page: number = 1): Promise<User[]> {
+    all(@Query('page') page: number = 1) {
         // return this.userService.all();
-        return this.userService.paginate(page);
+        return this.userService.paginate(page, ['role']);
     }
 
     @Post()
@@ -36,6 +39,36 @@ export class UserController {
 
     @Get('/:id')
     async get(@Param('id') id: number) {
+        return this.userService.findOne({ id }, ['role']);
+    }
+
+    @Put('info')
+    async updateInfo(
+        @Body() body: UpdateUserDto,
+        @Req() request: Request
+    ) {
+        const id = await this.authService.userId(request);
+        await this.userService.update(id, body);
+
+        return this.userService.findOne({ id });
+    }
+
+    @Put('password')
+    async updatePassword(
+        @Body('password') password: string,
+        @Body('password_confirm') password_confirm: string,
+        @Req() request: Request
+    ) {
+        if (password !== password_confirm) {
+            throw new BadRequestException('Passwords do not match!')
+        }
+        const id = await this.authService.userId(request);
+        const hashed = await bcrypt.hash('1234', 12);
+
+        await this.userService.update(id, {
+            password: hashed
+        });
+
         return this.userService.findOne({ id });
     }
 
