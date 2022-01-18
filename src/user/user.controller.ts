@@ -7,6 +7,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { UpdateUserDto } from './models/update-user-dto';
 import { AuthService } from 'src/auth/auth.service';
 import { Request } from 'express';
+import { HasPermission } from 'src/permission/decorators/has-permission.decorator';
 
 
 @Controller('users')
@@ -19,12 +20,14 @@ export class UserController {
     ) { }
 
     @Get()
+    @HasPermission('users')
     all(@Query('page') page: number = 1) {
         // return this.userService.all();
         return this.userService.paginate(page, ['role']);
     }
 
     @Post()
+    @HasPermission('users')
     async create(@Body() body: CreateUserDto): Promise<User> {
         const password = await bcrypt.hash('1234', 12);
 
@@ -38,6 +41,8 @@ export class UserController {
     }
 
     @Get('/:id')
+    @HasPermission('users')
+    @HasPermission('users')
     async get(@Param('id') id: number) {
         return this.userService.findOne({ id }, ['role']);
     }
@@ -54,6 +59,7 @@ export class UserController {
     }
 
     @Put('password')
+    @HasPermission('users')
     async updatePassword(
         @Body('password') password: string,
         @Body('password_confirm') password_confirm: string,
@@ -73,6 +79,7 @@ export class UserController {
     }
 
     @Put('/:id')
+    @HasPermission('users')
     async update(
         @Param('id') id: number,
         @Body() body: UpdateUserDto
@@ -81,6 +88,7 @@ export class UserController {
     }
 
     @Delete('/:id')
+    @HasPermission('users')
     async delete(@Param('id') id: number) {
         return this.userService.delete(id);
     }
